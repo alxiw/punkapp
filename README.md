@@ -1,6 +1,6 @@
 # Punks
 
-<img align="right" width="120" src="img/sample-icon.png">
+<img align="right" width="60" src="img/logo.webp">
 
 An Android application built around the [PunkAPI](https://github.com/alxiw/punkapi) — a mobile catalog of BrewDog beers.
 
