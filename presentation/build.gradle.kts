@@ -9,7 +9,7 @@ plugins {
 }
 
 configure<LibraryExtension> {
-    namespace = "io.github.alxiw.punks.presentation"
+    namespace = "io.github.alxiw.punkapp.presentation"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {

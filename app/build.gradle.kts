@@ -18,11 +18,11 @@ if (localPropertiesFile.exists()) {
 }
 
 configure<ApplicationExtension> {
-    namespace = "io.github.alxiw.punks"
+    namespace = "io.github.alxiw.punkapp"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "io.github.alxiw.punks"
+        applicationId = "io.github.alxiw.punkapp"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1

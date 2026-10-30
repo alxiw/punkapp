@@ -36,8 +36,8 @@
 -keep class * extends com.squareup.moshi.JsonAdapter$Factory
 
 # Keep network models to avoid obfuscation of field names used by Moshi reflection
--keep class io.github.alxiw.punks.data.remote.model.** { *; }
--keepclassmembers class io.github.alxiw.punks.data.remote.model.** {
+-keep class io.github.alxiw.punkapp.data.remote.model.** { *; }
+-keepclassmembers class io.github.alxiw.punkapp.data.remote.model.** {
     <fields>;
 }
 

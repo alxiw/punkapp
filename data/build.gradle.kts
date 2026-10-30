@@ -9,7 +9,7 @@ plugins {
 }
 
 configure<LibraryExtension> {
-    namespace = "io.github.alxiw.punks.data"
+    namespace = "io.github.alxiw.punkapp.data"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {

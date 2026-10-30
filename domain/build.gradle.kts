@@ -8,7 +8,7 @@ plugins {
 }
 
 configure<LibraryExtension> {
-    namespace = "io.github.alxiw.punks.domain"
+    namespace = "io.github.alxiw.punkapp.domain"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
