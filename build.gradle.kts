@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.google.ksp) apply false
     alias(libs.plugins.dagger.hilt.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.android.junit) apply false
 }
 
 tasks.register<Delete>("clean") {

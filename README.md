@@ -36,7 +36,7 @@ The app follows Clean Architecture. Data is fetched with pagination via Paging 3
 * [DataStore](https://developer.android.com/topic/libraries/architecture/datastore) 1.3.0
 * [Paging](https://developer.android.com/topic/libraries/architecture/paging) 3.5.3
 * [Coil](https://github.com/coil-kt/coil) 2.7.0
-* [ThreeTen Backport](https://www.threeten.org/threetenbp/) 1.7.5
+* [JUnit](https://junit.org) 6.1.3
 
 ## License
 

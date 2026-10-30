@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
+import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -7,6 +8,7 @@ plugins {
     alias(libs.plugins.google.ksp)
     alias(libs.plugins.dagger.hilt.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.android.junit)
 }
 
 val localProperties = Properties()
@@ -26,6 +28,10 @@ configure<ApplicationExtension> {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArgument(
+            "runnerBuilder",
+            "de.mannodermaus.junit5.AndroidJUnit5Builder"
+        )
     }
 
     signingConfigs {
@@ -65,6 +71,10 @@ kotlin {
     }
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(project(":domain"))
@@ -95,8 +105,14 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
 
     // Test
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.ext.junit)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+
+    androidTestImplementation(platform(libs.junit.android.bom))
+    androidTestImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidjunit.test.core)
+    androidTestRuntimeOnly(libs.androidjunit.test.runner)
     androidTestImplementation(libs.androidx.test.espresso)
 }

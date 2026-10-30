@@ -1,13 +1,13 @@
 package io.github.alxiw.punks.data.remote.util
 
-import org.threeten.bp.Year
-import org.threeten.bp.YearMonth
-import org.threeten.bp.format.DateTimeFormatter
-import org.threeten.bp.format.DateTimeParseException
-import org.threeten.bp.format.TextStyle
+import java.time.Year
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.format.TextStyle
 import java.util.Locale
 
-internal object LocalDateTimeAdapter {
+internal object DateFormatter {
 
     private val MONTH_YEAR_FORMATTER = DateTimeFormatter.ofPattern("MM/yyyy")
     private val YEAR_FORMATTER = DateTimeFormatter.ofPattern("yyyy")
