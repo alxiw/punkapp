@@ -1,4 +1,4 @@
-# Punks
+# PunkApp
 
 <img align="right" width="60" src="img/logo.webp">
 
@@ -12,8 +12,6 @@ An Android application built around the [PunkAPI](https://github.com/alxiw/punka
 - **Favorites** — heart any beer and find it later on a dedicated screen
 
 ## Architecture
-
-Punks started as a refactor of [this project](https://github.com/iiinaiii/Punks), but eventually grew into a standalone app that covers all the functionality of [Punk Brew](https://github.com/alxiw/punk-brew) — rewritten from scratch on a modern stack.
 
 The app follows Clean Architecture with a clear separation of data, domain, and presentation layers. Network responses are cached on disk via OkHttp, and beer images are cached independently via Coil — so both content and artwork stay available offline after the first load. Pagination is handled by Paging 3. Favorites are persisted locally in DataStore preferences. The UI is built entirely with Jetpack Compose with full edge-to-edge support.
 

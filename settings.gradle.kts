@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Punks"
+rootProject.name = "PunkApp"
 include(":app")
 include(":domain")
 include(":data")
