@@ -34,7 +34,7 @@ internal fun String?.toStringOrDefault(): String {
 }
 
 internal fun String?.toDateOrDefault(): String {
-    return this?.let { LocalDateTimeAdapter.formatDate(it) } ?: EMPTY_PLACEHOLDER
+    return this?.let { LocalDateTimeAdapter.formatDate(it, false) } ?: EMPTY_PLACEHOLDER
 }
 
 internal fun Float.toCleanString(): String {
