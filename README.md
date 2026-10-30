@@ -30,13 +30,13 @@ The app follows Clean Architecture. Data is fetched with pagination via Paging 3
 * [Navigation](https://developer.android.com/guide/navigation) 2.10.2
 * [Hilt](https://github.com/google/dagger) 2.60.1
 * [Coroutines](https://github.com/Kotlin/kotlinx.coroutines) 1.11.0
-* [OkHttp](https://github.com/square/okhttp) 5.5.0
+* [OkHttp](https://github.com/square/okhttp) 5.5.1
 * [Retrofit](https://github.com/square/retrofit) 3.0.0
 * [Moshi](https://github.com/square/moshi) 1.15.2
-* [DataStore](https://developer.android.com/topic/libraries/architecture/datastore) 1.2.1
+* [DataStore](https://developer.android.com/topic/libraries/architecture/datastore) 1.3.0
 * [Paging](https://developer.android.com/topic/libraries/architecture/paging) 3.5.3
 * [Coil](https://github.com/coil-kt/coil) 2.7.0
-* [ThreeTen Backport](https://www.threeten.org/threetenbp/) 1.7.3
+* [ThreeTen Backport](https://www.threeten.org/threetenbp/) 1.7.5
 
 ## License
 

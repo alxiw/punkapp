@@ -11,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.alxiw.punks.data.di.ImageHttpClient
 import okhttp3.OkHttpClient
 import okio.Path.Companion.toPath
 import javax.inject.Singleton
@@ -19,20 +20,20 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    private const val CACHE_NAME = "punks_images_cache"
+    private const val CACHE_NAME = "punkapp_images_cache"
     private const val IMAGE_CACHE_SIZE = 120 * 1024 * 1024 // 120MB
 
     @Provides
     @Singleton
     fun provideImageLoader(
         @ApplicationContext context: Context,
-        client: OkHttpClient
+        @ImageHttpClient client: OkHttpClient
     ): ImageLoader {
         return ImageLoader.Builder(context)
             .okHttpClient(client)
             .memoryCache {
                 MemoryCache.Builder(context)
-                    .maxSizePercent(0.25) // 25% from available RAM
+                    .maxSizePercent(0.2) // 20% from available RAM
                     .build()
             }
             .diskCache {

@@ -1,7 +1,6 @@
 package io.github.alxiw.punks.presentation.favorites
 
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -41,7 +40,7 @@ import io.github.alxiw.punks.presentation.beers.ErrorItem
 import io.github.alxiw.punks.presentation.beers.LoadingItem
 import io.github.alxiw.punks.presentation.beers.model.BeerItemUiModel
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
     viewModel: FavoritesViewModel = hiltViewModel(),
@@ -107,7 +106,6 @@ fun FavoritesScreen(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun FavoritesList(
     beers: LazyPagingItems<BeerItemUiModel>,

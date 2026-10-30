@@ -17,11 +17,17 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Cache
+import okhttp3.CacheControl
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.File
+import java.io.IOException
+import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -29,10 +35,18 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DataModule {
 
-    private const val CACHE_MAX_STALE = 60 * 60 * 24 * 14 // 14 days
-    private const val CACHE_MAX_AGE = 60 * 60 * 24 * 1 // 1 day
+    private const val CACHE_MAX_STALE = 60 * 60 * 24 * 28 // 28 days
+    private const val CACHE_MAX_AGE = 60 * 60 * 1 * 1 // 60 minutes
     private const val CACHE_HEADER = "Cache-Control"
-    private const val DATA_STORE_FILE_NAME = "punks"
+    private const val PRAGMA_HEADER = "Pragma"
+    private const val EXPIRES_HEADER = "Expires"
+    private const val CONTENT_TYPE_HEADER = "Content-Type"
+    private const val JSON_MIME_TYPE = "application/json"
+    private const val NO_STORE = "no-store"
+    private const val API_LOG_TAG = "HELLO-API"
+    private const val IMAGE_LOG_TAG = "HELLO-IMAGES"
+    private const val TIMEOUT_SECONDS = 15L
+    private const val DATA_STORE_FILE_NAME = "punkapp"
 
     @Provides
     @Singleton
@@ -59,50 +73,138 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(cache: Cache, handler: NetworkHandler): OkHttpClient {
-        val interceptor = HttpLoggingInterceptor { message -> Log.d("HELLO", message) }
+    @ApiHttpClient
+    fun provideApiHttpClient(cache: Cache, handler: NetworkHandler): OkHttpClient {
+        val logging = HttpLoggingInterceptor { message -> Log.d(API_LOG_TAG, message) }
             .apply { level = HttpLoggingInterceptor.Level.BASIC }
+        val freshCacheControl = CacheControl.Builder()
+            .maxAge(CACHE_MAX_AGE, TimeUnit.SECONDS)
+            .build()
+            .toString()
+
         return OkHttpClient.Builder()
-            .readTimeout(15, TimeUnit.SECONDS)
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .addInterceptor(interceptor)
+            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .addInterceptor(logging)
             .cache(cache)
             .addInterceptor { chain ->
-                val request = if (!handler.isConnected) {
-                    //val cacheControlValue = CacheControl.Builder().onlyIfCached().maxStale(CACHE_MAX_STALE, TimeUnit.SECONDS).build().toString()
-                    chain.request().newBuilder()
-                        .header(
-                            CACHE_HEADER,
-                            "public, only-if-cached, max-stale=$CACHE_MAX_STALE"
-                        )
-                        .build()
-                } else {
-                    chain.request()
+                val request = chain.request()
+
+                // Offline: the cache is the only source, stale up to CACHE_MAX_STALE.
+                if (!handler.isConnected) {
+                    return@addInterceptor chain.proceed(cacheOnlyRequest(request))
                 }
-                chain.proceed(request)
+
+                val networkResponse = try {
+                    chain.proceed(request)
+                } catch (io: IOException) {
+                    return@addInterceptor staleResponseOrThrow(chain, io)
+                }
+
+                if (networkResponse.isUsable()) return@addInterceptor networkResponse
+
+                // OkHttp requires the previous body to be released before the chain may start
+                // another exchange ("the previous response is still open").
+                val code = networkResponse.code
+                val message = networkResponse.message
+                networkResponse.close()
+
+                // The server answered, but the payload is unusable (5xx or an HTML page served
+                // with 200 after the endpoints moved). Stale data is better than an error screen.
+                val stale = proceedCacheOnly(chain)
+                if (stale != null) {
+                    Log.d(API_LOG_TAG, "Serving stale cache for ${request.url} after HTTP $code")
+                    return@addInterceptor stale
+                }
+
+                throw IOException("HTTP $code $message for ${request.url} (no usable cache)")
             }
             .addNetworkInterceptor { chain ->
                 val response = chain.proceed(chain.request())
-                val cacheControl = if (response.isSuccessful) {
-                    //CacheControl.Builder().maxAge(CACHE_MAX_AGE, TimeUnit.SECONDS).build()
-                    "public, max-age=$CACHE_MAX_AGE"
-                } else {
-                    //CacheControl.FORCE_NETWORK
-                    "no-store"
+                when {
+                    // 304 must reach CacheInterceptor untouched: on update its headers are
+                    // combined into the stored entry, so no-store here would kill the cache.
+                    response.code == HTTP_NOT_MODIFIED -> response
+
+                    response.isSuccessful && response.isJson() -> response.newBuilder()
+                        .removeHeader(PRAGMA_HEADER)
+                        .removeHeader(CACHE_HEADER)
+                        .removeHeader(EXPIRES_HEADER)
+                        .header(CACHE_HEADER, freshCacheControl)
+                        .build()
+
+                    // Never let an error page (e.g. index.html served with 200) overwrite
+                    // good data in the cache.
+                    else -> response.newBuilder()
+                        .header(CACHE_HEADER, NO_STORE)
+                        .build()
                 }
-                response.newBuilder()
-                    .removeHeader("Pragma")
-                    .removeHeader(CACHE_HEADER)
-                    .removeHeader("Expires")
-                    .header(CACHE_HEADER, cacheControl)
-                    .build()
             }
+            .build()
+    }
+
+    private fun cacheOnlyRequest(request: Request): Request = request.newBuilder()
+        .cacheControl(
+            CacheControl.Builder()
+                .onlyIfCached()
+                .maxStale(CACHE_MAX_STALE, TimeUnit.SECONDS)
+                .build()
+        )
+        .build()
+
+    private fun staleResponseOrThrow(chain: Interceptor.Chain, cause: IOException): Response {
+        if (!chain.call().isCanceled()) {
+            proceedCacheOnly(chain)?.let { return it }
+        }
+        throw cause
+    }
+
+    /**
+     * Second pass over the same chain: application interceptors are allowed to call proceed()
+     * several times. Without network access the cache can answer with a stale entry.
+     */
+    private fun proceedCacheOnly(chain: Interceptor.Chain): Response? {
+        val stale = try {
+            chain.proceed(cacheOnlyRequest(chain.request()))
+        } catch (ignored: IOException) {
+            null
+        }
+        if (stale != null && !stale.isSuccessful) { // 504 Unsatisfiable Request (only-if-cached)
+            stale.close()
+            return null
+        }
+        return stale
+    }
+
+    private fun Response.isJson(): Boolean {
+        // A missing header keeps the previous behaviour instead of guessing.
+        val contentType = header(CONTENT_TYPE_HEADER) ?: return true
+        return contentType.startsWith(JSON_MIME_TYPE, ignoreCase = true)
+    }
+
+    private fun Response.isUsable(): Boolean = isSuccessful && isJson()
+
+    // Coil caches images on its own disk, so this client needs neither the API cache policy
+    // nor the stale fallback - only transport settings and logging.
+    @Provides
+    @Singleton
+    @ImageHttpClient
+    fun provideImageHttpClient(): OkHttpClient {
+        val logging = HttpLoggingInterceptor { message -> Log.d(IMAGE_LOG_TAG, message) }
+            .apply { level = HttpLoggingInterceptor.Level.BASIC }
+        return OkHttpClient.Builder()
+            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .addInterceptor(logging)
             .build()
     }
 
     @Provides
     @Singleton
-    internal fun provideBeersSearchService(moshi: Moshi, client: OkHttpClient): BeersSearchService {
+    internal fun provideBeersSearchService(
+        moshi: Moshi,
+        @ApiHttpClient client: OkHttpClient
+    ): BeersSearchService {
         return Retrofit.Builder()
             .baseUrl(BeersSearchService.ENDPOINT)
             .client(client)

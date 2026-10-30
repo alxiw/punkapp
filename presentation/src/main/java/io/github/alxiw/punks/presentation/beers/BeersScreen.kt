@@ -7,7 +7,6 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
@@ -81,7 +80,7 @@ import coil.size.Precision
 import io.github.alxiw.punks.presentation.R
 import io.github.alxiw.punks.presentation.beers.model.BeerItemUiModel
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BeersScreen(
     viewModel: BeersViewModel = hiltViewModel(),
@@ -317,7 +316,6 @@ internal fun BeersError(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun BeersList(
     beers: LazyPagingItems<BeerItemUiModel>,
@@ -360,7 +358,6 @@ private fun BeersList(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun BeerItem(
     beer: BeerItemUiModel,
@@ -539,7 +536,6 @@ internal fun ErrorItem(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun Modifier.sharedElementIfNotPreview(
     sharedTransitionScope: SharedTransitionScope,
@@ -602,7 +598,6 @@ private fun ErrorItemPreview() {
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview(showBackground = true)
 @Composable
 private fun BeerItemPreview() {
@@ -615,7 +610,7 @@ private fun BeerItemPreview() {
                         name = "Lost Lager",
                         tagline = "Dry-Hopped Pilsner.",
                         firstBrewed = "DECEMBER 2018",
-                        imageUrl = "https://punkapi.dev/v3/images/001.png",
+                        imageUrl = "https://punkapi.dev/api/v3/images/001.png",
                         abv = "4.5%",
                         isFavorite = true
                     ),

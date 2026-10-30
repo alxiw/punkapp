@@ -5,8 +5,8 @@ import android.os.StatFs
 import java.io.File
 
 private const val MIN_DISK_CACHE_SIZE = 1 * 1024 * 1024 // 1MB
-private const val MAX_DISK_CACHE_SIZE = 15 * 1024 * 1024 // 15MB
-private const val CACHE_NAME = "punks_cache"
+private const val MAX_DISK_CACHE_SIZE = 15 * 1024 * 1024 // 8MB
+private const val CACHE_NAME = "punkapp_json_cache"
 
 internal object CacheUtil {
 

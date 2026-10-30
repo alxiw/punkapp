@@ -2,7 +2,6 @@ package io.github.alxiw.punks.presentation.detail
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
@@ -62,7 +61,7 @@ import io.github.alxiw.punks.presentation.detail.model.MaltUiModel
 import io.github.alxiw.punks.presentation.detail.model.MashTempUiModel
 import io.github.alxiw.punks.presentation.detail.model.MethodUiModel
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BeerDetailScreen(
     viewModel: BeerDetailViewModel = hiltViewModel(),
@@ -193,7 +192,6 @@ private fun FavoriteAction(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun BeerDetailContent(
     beer: BeerDetailUiModel,
@@ -304,7 +302,6 @@ private fun BeerDetailContent(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun Modifier.beerSharedElement(
     key: String,
@@ -317,7 +314,6 @@ private fun Modifier.beerSharedElement(
     )
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun BeerHeroSection(
     beer: BeerDetailUiModel,
@@ -562,7 +558,6 @@ private fun BeerDetailErrorPreview() {
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview(showBackground = true)
 @Composable
 private fun BeerDetailContentPreview() {
@@ -572,7 +567,7 @@ private fun BeerDetailContentPreview() {
         tagline = "Dry-Hopped Pilsner.",
         firstBrewed = "DECEMBER 2018",
         description = "A pilsner that combines the light, crisp and clean lager profile provided by Weihenstephan's house yeast, with the vibrant citrus and stonefruit aromas associated with new German hop Saphir. This lager is easy-going but has subtle depths; toast, hints of spice and a zesty lime marmalade character.",
-        imageUrl = "https://punkapi.dev/v3/images/366.png",
+        imageUrl = "https://punkapi.dev/api/v3/images/366.png",
         abv = "4.5",
         ibu = "37",
         targetOg = "1056",

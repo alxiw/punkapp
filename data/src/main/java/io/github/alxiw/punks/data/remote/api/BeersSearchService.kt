@@ -29,7 +29,7 @@ internal interface BeersSearchService {
     companion object {
         val ENDPOINT = Uri.Builder().scheme("https")
             .authority("punkapi.dev")
-            .appendEncodedPath("v3/")
+            .appendEncodedPath("api/v3/")
             .build()
             .toString()
     }
