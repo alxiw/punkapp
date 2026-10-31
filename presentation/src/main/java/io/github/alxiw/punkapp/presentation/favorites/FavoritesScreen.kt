@@ -22,6 +22,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +36,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import io.github.alxiw.punkapp.presentation.beers.BeerItem
+import io.github.alxiw.punkapp.presentation.beers.BeerPreviewHost
 import io.github.alxiw.punkapp.presentation.beers.BeersEmpty
 import io.github.alxiw.punkapp.presentation.beers.BeersError
 import io.github.alxiw.punkapp.presentation.beers.BeersLoading
@@ -51,6 +55,7 @@ fun FavoritesScreen(
 ) {
     val beers = viewModel.favoritesFlow.collectAsLazyPagingItems()
     val favoriteIds by viewModel.favoriteIds.collectAsState()
+    var previewBeerId by rememberSaveable { mutableStateOf<Int?>(null) }
 
     Scaffold(
         topBar = {
@@ -98,10 +103,17 @@ fun FavoritesScreen(
                         sharedTransitionScope = sharedTransitionScope,
                         contentPadding = paddingValues,
                         onBeerClick = onBeerClick,
+                        onBeerLongClick = { previewBeerId = it },
                         onFavoriteClick = viewModel::onFavoriteClick
                     )
                 }
             }
+
+            BeerPreviewHost(
+                beers = beers,
+                previewBeerId = previewBeerId,
+                onDismiss = { previewBeerId = null }
+            )
         }
     }
 }
@@ -114,6 +126,7 @@ private fun FavoritesList(
     sharedTransitionScope: SharedTransitionScope,
     contentPadding: PaddingValues,
     onBeerClick: (Int) -> Unit,
+    onBeerLongClick: (Int) -> Unit,
     onFavoriteClick: (Int) -> Unit,
 ) {
     LazyColumn(
@@ -138,7 +151,8 @@ private fun FavoritesList(
                         animatedVisibilityScope = animatedVisibilityScope,
                         sharedTransitionScope = sharedTransitionScope,
                         onFavoriteClick = { onFavoriteClick(beer.id) },
-                        onClick = { onBeerClick(beer.id) }
+                        onClick = { onBeerClick(beer.id) },
+                        onLongClick = { onBeerLongClick(beer.id) }
                     )
                     HorizontalDivider()
                 }

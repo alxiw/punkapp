@@ -10,7 +10,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -98,6 +98,7 @@ fun BeersScreen(
     }
     val focusRequester = remember { FocusRequester() }
     var shouldRequestFocus by remember { mutableStateOf(false) }
+    var previewBeerId by rememberSaveable { mutableStateOf<Int?>(null) }
 
     BackHandler(enabled = isSearchActive) {
         isSearchActive = false
@@ -205,10 +206,17 @@ fun BeersScreen(
                         sharedTransitionScope = sharedTransitionScope,
                         contentPadding = paddingValues,
                         onBeerClick = onBeerClick,
+                        onBeerLongClick = { previewBeerId = it },
                         onFavoriteClick = viewModel::onFavoriteClick
                     )
                 }
             }
+
+            BeerPreviewHost(
+                beers = beers,
+                previewBeerId = previewBeerId,
+                onDismiss = { previewBeerId = null }
+            )
         }
     }
 }
@@ -324,6 +332,7 @@ private fun BeersList(
     sharedTransitionScope: SharedTransitionScope,
     contentPadding: PaddingValues,
     onBeerClick: (Int) -> Unit,
+    onBeerLongClick: (Int) -> Unit,
     onFavoriteClick: (Int) -> Unit,
 ) {
     LazyColumn(
@@ -344,7 +353,8 @@ private fun BeersList(
                     animatedVisibilityScope = animatedVisibilityScope,
                     sharedTransitionScope = sharedTransitionScope,
                     onFavoriteClick = { onFavoriteClick(beer.id) },
-                    onClick = { onBeerClick(beer.id) }
+                    onClick = { onBeerClick(beer.id) },
+                    onLongClick = { onBeerLongClick(beer.id) }
                 )
                 HorizontalDivider()
             }
@@ -365,13 +375,18 @@ internal fun BeerItem(
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
     onFavoriteClick: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onLongClickLabel = stringResource(R.string.preview),
+                onLongClick = onLongClick,
+                onClick = onClick
+            )
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -609,16 +624,21 @@ private fun BeerItemPreview() {
                         id = 366,
                         name = "Lost Lager",
                         tagline = "Dry-Hopped Pilsner.",
-                        firstBrewed = "DECEMBER 2018",
                         imageUrl = "https://punkapi.dev/api/v3/images/001.png",
                         abv = "4.5%",
+                        ibu = "37",
+                        ebc = "5",
+                        firstBrewed = "DECEMBER 2018",
+                        description = "A pilsner that combines the light, crisp and clean lager profile provided by Weihenstephan's house yeast, with the vibrant citrus and stonefruit aromas associated with new German hop Saphir.",
+                        foodPairing = listOf("Spicy thai curry", "Grilled steak", "Cheesecake"),
                         isFavorite = true
                     ),
                     isFavorite = true,
                     animatedVisibilityScope = this@AnimatedVisibility,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     onFavoriteClick = {},
-                    onClick = {}
+                    onClick = {},
+                    onLongClick = {}
                 )
             }
         }

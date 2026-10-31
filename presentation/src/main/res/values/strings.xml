@@ -5,6 +5,9 @@
     <string name="favorites">Favorites</string>
     <string name="search_hint">Search…</string>
 
+    <!-- Beer Preview -->
+    <string name="preview">Preview</string>
+
     <!-- Beer Detail -->
     <string name="first_brewed">FIRST BREWED</string>
     <string name="abv">ABV</string>
