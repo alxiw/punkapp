@@ -249,15 +249,23 @@ private fun BeerDetailContent(
                 )
             }
 
+            // food pairing
+            DetailSection(stringResource(R.string.header_food_pairing)) {
+                beer.foodPairing.forEach { food ->
+                    Text(
+                        text = "• $food",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 8.dp, start = 8.dp, end = 8.dp)
+                    )
+                }
+            }
+
             // basics
             DetailSection(stringResource(R.string.header_basics)) {
                 LabelValueRow(stringResource(R.string.volume), beer.volume)
                 LabelValueRow(stringResource(R.string.boil_volume), beer.boilVolume)
-                LabelValueRow(stringResource(R.string.abv), beer.abv)
                 LabelValueRow(stringResource(R.string.target_fg), beer.targetFg)
                 LabelValueRow(stringResource(R.string.target_og), beer.targetOg)
-                LabelValueRow(stringResource(R.string.ebc), beer.ebc)
-                LabelValueRow(stringResource(R.string.srm), beer.srm)
                 LabelValueRow(stringResource(R.string.ph), beer.ph)
                 LabelValueRow(stringResource(R.string.attenuation_level), beer.attenuationLevel)
             }
@@ -265,17 +273,6 @@ private fun BeerDetailContent(
             BeerMethodSection(beer.method)
 
             BeerIngredientsSection(beer.ingredients)
-
-            // food pairing
-            DetailSection(stringResource(R.string.header_food_pairing)) {
-                beer.foodPairing.forEach { food ->
-                    Text(
-                        text = food,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(top = 8.dp, start = 8.dp, end = 8.dp)
-                    )
-                }
-            }
 
             // tips
             DetailSection(stringResource(R.string.header_brewers_tips)) {
@@ -395,8 +392,8 @@ private fun BeerHeroSection(
                         value = beer.ibu
                     )
                     StatItem(
-                        title = stringResource(R.string.og),
-                        value = beer.targetOg
+                        title = stringResource(R.string.ebc),
+                        value = beer.ebc
                     )
                 }
             }
