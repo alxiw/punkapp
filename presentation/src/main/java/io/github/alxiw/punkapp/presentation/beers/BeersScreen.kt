@@ -456,67 +456,60 @@ internal fun BeerItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = beer.abv,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .width(AbvColumnWidth)
-                        .sharedElementIfNotPreview(
-                            sharedTransitionScope = sharedTransitionScope,
-                            key = "abv-${beer.id}",
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                )
-
                 Row(
-                    modifier = Modifier.width(IbuColumnWidth),
+                    modifier = Modifier.sharedElementIfNotPreview(
+                        sharedTransitionScope = sharedTransitionScope,
+                        key = "stats-${beer.id}",
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    beer.ibu?.let { ibu ->
-                        Icon(
-                            painter = painterResource(R.drawable.ic_beer_ibu),
-                            contentDescription = stringResource(R.string.ibu),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(StatIconSize)
-                        )
-                        Text(
-                            text = ibu,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.sharedElementIfNotPreview(
-                                sharedTransitionScope = sharedTransitionScope,
-                                key = "ibu-${beer.id}",
-                                animatedVisibilityScope = animatedVisibilityScope
+                    Text(
+                        text = beer.abv,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.width(AbvColumnWidth)
+                    )
+
+                    Row(
+                        modifier = Modifier.width(IbuColumnWidth),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        beer.ibu?.let { ibu ->
+                            Icon(
+                                painter = painterResource(R.drawable.ic_beer_ibu),
+                                contentDescription = stringResource(R.string.ibu),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(StatIconSize)
                             )
-                        )
+                            Text(
+                                text = ibu,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
-                }
 
-                Row(
-                    modifier = Modifier.width(EbcColumnWidth),
-                    horizontalArrangement = Arrangement.spacedBy(StatMarkerSpacing),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    beer.ebc?.let { ebc ->
-                        Box(
-                            modifier = Modifier
-                                .size(StatMarkerSize)
-                                .then(ebcMarkerModifier(ebcColor))
-                        )
-                        Text(
-                            text = ebc,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.sharedElementIfNotPreview(
-                                sharedTransitionScope = sharedTransitionScope,
-                                key = "ebc-${beer.id}",
-                                animatedVisibilityScope = animatedVisibilityScope
+                    Row(
+                        modifier = Modifier.width(EbcColumnWidth),
+                        horizontalArrangement = Arrangement.spacedBy(StatMarkerSpacing),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        beer.ebc?.let { ebc ->
+                            Box(
+                                modifier = Modifier
+                                    .size(StatMarkerSize)
+                                    .then(ebcMarkerModifier(ebcColor))
                             )
-                        )
+                            Text(
+                                text = ebc,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
 

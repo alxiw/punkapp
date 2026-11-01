@@ -378,7 +378,7 @@ private fun BeerHeroSection(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                         .beerSharedElement(
-                            key = "abv-${beer.id}",
+                            key = "stats-${beer.id}",
                             scope = sharedTransitionScope,
                             animatedVisibilityScope = animatedVisibilityScope
                         )
