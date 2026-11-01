@@ -7,6 +7,7 @@ import io.github.alxiw.punkapp.domain.model.Ingredients
 import io.github.alxiw.punkapp.domain.model.Malt
 import io.github.alxiw.punkapp.domain.model.MashTemp
 import io.github.alxiw.punkapp.domain.model.Method
+import io.github.alxiw.punkapp.presentation.common.DateFormatter
 
 internal data class BeerDetailUiModel(
     val id: Int,
@@ -66,21 +67,28 @@ internal data class HopUiModel(
     val attribute: String?
 )
 
+private const val EMPTY_PLACEHOLDER = "∅"
+
+/** The detail screen always shows the placeholder instead of an absent value */
+internal fun String?.orPlaceholder(): String {
+    return takeUnless { it.isNullOrBlank() } ?: EMPTY_PLACEHOLDER
+}
+
 internal fun Beer.toDetailUiModel() = BeerDetailUiModel(
     id = id,
     name = name,
     tagline = tagline,
-    firstBrewed = firstBrewed,
+    firstBrewed = DateFormatter.formatDate(firstBrewed, short = false).orPlaceholder(),
     description = description,
     imageUrl = imageUrl,
     abv = abv,
-    ibu = ibu,
-    targetOg = targetOg,
-    targetFg = targetFg,
-    ebc = ebc,
-    srm = srm,
-    ph = ph,
-    attenuationLevel = attenuationLevel,
+    ibu = ibu.orPlaceholder(),
+    targetOg = targetOg.orPlaceholder(),
+    targetFg = targetFg.orPlaceholder(),
+    ebc = ebc.orPlaceholder(),
+    srm = srm.orPlaceholder(),
+    ph = ph.orPlaceholder(),
+    attenuationLevel = attenuationLevel.orPlaceholder(),
     volume = volume,
     boilVolume = boilVolume,
     method = method.toUiModel(),
@@ -98,12 +106,12 @@ private fun Method.toUiModel() = MethodUiModel(
 )
 
 private fun MashTemp.toUiModel() = MashTempUiModel(
-    temp = temp,
+    temp = temp.orPlaceholder(),
     duration = duration
 )
 
 private fun Fermentation.toUiModel() = FermentationUiModel(
-    temp = temp
+    temp = temp.orPlaceholder()
 )
 
 private fun Ingredients.toUiModel() = IngredientsUiModel(

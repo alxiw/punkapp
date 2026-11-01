@@ -1,4 +1,4 @@
-package io.github.alxiw.punkapp.data.remote.util
+package io.github.alxiw.punkapp.presentation.common
 
 import java.time.Year
 import java.time.YearMonth

@@ -10,7 +10,7 @@ internal fun VolumeResponse.toVolumeText(): String {
 }
 
 internal fun TempResponse.toTempText(): String {
-    return value?.let { it.toString() + ValueUnit.convertToDisplayName(unit) } ?: EMPTY_PLACEHOLDER
+    return value?.let { it.toString() + ValueUnit.convertToDisplayName(unit) } ?: ""
 }
 
 internal fun AmountResponse.toAmountText(): String {
@@ -18,27 +18,17 @@ internal fun AmountResponse.toAmountText(): String {
 }
 
 internal fun Float?.toStringOrDefault(): String {
-    return this?.toCleanString() ?: EMPTY_PLACEHOLDER
+    return this?.toCleanString() ?: ""
 }
 
 internal fun Int?.toDurationInMinutes(): String? {
     return this?.let { "$it min" }
 }
 
-internal fun Int?.toStringOrDefault(): String {
-    return this?.toString() ?: EMPTY_PLACEHOLDER
-}
-
 internal fun String?.toStringOrDefault(): String {
-    return this?.takeIf { it.isNotBlank() } ?: EMPTY_PLACEHOLDER
-}
-
-internal fun String?.toDateOrDefault(): String {
-    return this?.let { DateFormatter.formatDate(it, false) } ?: EMPTY_PLACEHOLDER
+    return this?.takeIf { it.isNotBlank() } ?: ""
 }
 
 internal fun Float.toCleanString(): String {
     return if (this % 1.0 == 0.0) toLong().toString() else toString()
 }
-
-private const val EMPTY_PLACEHOLDER = "∅"

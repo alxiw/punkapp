@@ -10,6 +10,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,6 +80,13 @@ import coil.request.ImageRequest
 import coil.size.Precision
 import io.github.alxiw.punkapp.presentation.R
 import io.github.alxiw.punkapp.presentation.beers.model.BeerItemUiModel
+
+private val AbvColumnWidth = 50.dp
+private val IbuColumnWidth = 58.dp
+private val EbcColumnWidth = 58.dp
+private val StatIconSize = 16.dp
+private val StatMarkerSize = 10.dp
+private val StatMarkerSpacing = 2.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -378,6 +386,8 @@ internal fun BeerItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
+    val ebcColor = remember(beer.ebc) { ebcColorOrNull(beer.ebc) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -449,8 +459,10 @@ internal fun BeerItem(
                 Text(
                     text = beer.abv,
                     style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
-                        .width(50.dp)
+                        .width(AbvColumnWidth)
                         .sharedElementIfNotPreview(
                             sharedTransitionScope = sharedTransitionScope,
                             key = "abv-${beer.id}",
@@ -458,16 +470,68 @@ internal fun BeerItem(
                         )
                 )
 
+                Row(
+                    modifier = Modifier.width(IbuColumnWidth),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    beer.ibu?.let { ibu ->
+                        Icon(
+                            painter = painterResource(R.drawable.ic_beer_ibu),
+                            contentDescription = stringResource(R.string.ibu),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(StatIconSize)
+                        )
+                        Text(
+                            text = ibu,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.sharedElementIfNotPreview(
+                                sharedTransitionScope = sharedTransitionScope,
+                                key = "ibu-${beer.id}",
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.width(EbcColumnWidth),
+                    horizontalArrangement = Arrangement.spacedBy(StatMarkerSpacing),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    beer.ebc?.let { ebc ->
+                        Box(
+                            modifier = Modifier
+                                .size(StatMarkerSize)
+                                .then(ebcMarkerModifier(ebcColor))
+                        )
+                        Text(
+                            text = ebc,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.sharedElementIfNotPreview(
+                                sharedTransitionScope = sharedTransitionScope,
+                                key = "ebc-${beer.id}",
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                        )
+                    }
+                }
+
                 Text(
                     text = beer.firstBrewed,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .weight(1f)
                         .sharedElementIfNotPreview(
                             sharedTransitionScope = sharedTransitionScope,
                             key = "date-${beer.id}",
                             animatedVisibilityScope = animatedVisibilityScope
-                        ),
-                    style = MaterialTheme.typography.bodyMedium
+                        )
                 )
             }
         }
@@ -498,6 +562,19 @@ internal fun BeerItem(
             )
         }
     }
+}
+
+@Composable
+private fun ebcMarkerModifier(color: Color?): Modifier {
+    if (color == null) return Modifier
+
+    return Modifier
+        .background(color = color, shape = CircleShape)
+        .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+            shape = CircleShape
+        )
 }
 
 @Composable
@@ -625,10 +702,10 @@ private fun BeerItemPreview() {
                         name = "Lost Lager",
                         tagline = "Dry-Hopped Pilsner.",
                         imageUrl = "https://punkapi.dev/api/v3/images/001.png",
-                        abv = "4.5%",
-                        ibu = "37",
-                        ebc = "5",
-                        firstBrewed = "DECEMBER 2018",
+                        abv = "10.96%",
+                        ibu = "1157",
+                        ebc = "800",
+                        firstBrewed = "DEC 2018",
                         description = "A pilsner that combines the light, crisp and clean lager profile provided by Weihenstephan's house yeast, with the vibrant citrus and stonefruit aromas associated with new German hop Saphir.",
                         foodPairing = listOf("Spicy thai curry", "Grilled steak", "Cheesecake"),
                         isFavorite = true

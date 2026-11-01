@@ -1,11 +1,12 @@
-package io.github.alxiw.punkapp.data.remote.util
+package io.github.alxiw.punkapp.presentation.common
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-
-private const val EMPTY_PLACEHOLDER = "∅"
+import org.junit.jupiter.params.provider.ValueSource
+import java.util.UUID
 
 internal class DateFormatterTest {
 
@@ -22,14 +23,21 @@ internal class DateFormatterTest {
         "13/2018, false, 13/2018",
         "1/2018, false, 1/2018"
     )
-    fun formatsDate(input: String, short: Boolean, expected: String) {
+    fun `formats date according to short flag`(input: String, short: Boolean, expected: String) {
         assertEquals(expected, DateFormatter.formatDate(input, short))
     }
 
-    @DisplayName("Keeps the empty placeholder")
+    @DisplayName("Returns empty string when input is empty")
+    @Test
+    fun `returns empty string when input is empty`() {
+        assertEquals("", DateFormatter.formatDate("", short = false))
+    }
+
+    @DisplayName("Returns original string unchanged when input is not a date")
     @ParameterizedTest(name = "short = {0}")
-    @CsvSource("false", "true")
-    fun keepsEmptyPlaceholder(short: Boolean) {
-        assertEquals(EMPTY_PLACEHOLDER, DateFormatter.formatDate(EMPTY_PLACEHOLDER, short))
+    @ValueSource(booleans = [false, true])
+    fun `returns original string when input is not a date`(short: Boolean) {
+        val randomString = UUID.randomUUID().toString()
+        assertEquals(randomString, DateFormatter.formatDate(randomString, short))
     }
 }

@@ -2,7 +2,6 @@ package io.github.alxiw.punkapp.data.remote.model
 
 import io.github.alxiw.punkapp.data.remote.api.BeersSearchService
 import io.github.alxiw.punkapp.data.remote.util.toAmountText
-import io.github.alxiw.punkapp.data.remote.util.toDateOrDefault
 import io.github.alxiw.punkapp.data.remote.util.toDurationInMinutes
 import io.github.alxiw.punkapp.data.remote.util.toStringOrDefault
 import io.github.alxiw.punkapp.data.remote.util.toTempText
@@ -98,7 +97,7 @@ internal fun BeerResponse.toBeer() = Beer(
     id = id,
     name = name,
     tagline = tagline,
-    firstBrewed = firstBrewed.toDateOrDefault(),
+    firstBrewed = firstBrewed.toStringOrDefault(),
     description = description,
     imageUrl = "${BeersSearchService.ENDPOINT}images/$image",
     abv = "${abv.toStringOrDefault()}%",
