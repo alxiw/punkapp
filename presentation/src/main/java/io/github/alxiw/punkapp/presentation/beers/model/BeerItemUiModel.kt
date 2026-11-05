@@ -10,9 +10,9 @@ internal data class BeerItemUiModel(
     val name: String,
     val tagline: String,
     val imageUrl: String,
-    val abv: String,
-    val ibu: String?,
-    val ebc: String?,
+    val abv: Double,
+    val ibu: Double?,
+    val ebc: Double?,
     val firstBrewed: String,
     val description: String,
     val foodPairing: List<String>,
@@ -25,17 +25,10 @@ internal fun Beer.toItemUiModel() = BeerItemUiModel(
     tagline = tagline,
     imageUrl = imageUrl,
     abv = abv,
-    ibu = ibu.toStatValueOrNull(),
-    ebc = ebc.toStatValueOrNull(),
+    ibu = ibu,
+    ebc = ebc,
     firstBrewed = DateFormatter.formatDate(firstBrewed, short = true),
     description = description,
     foodPairing = foodPairing,
     isFavorite = isFavorite
 )
-
-/**
- * Null for empty values, so the list does not render anything for unknown IBU/EBC.
- */
-internal fun String.toStatValueOrNull(): String? {
-    return takeIf { it.isNotBlank() }
-}

@@ -80,6 +80,7 @@ import coil.request.ImageRequest
 import coil.size.Precision
 import io.github.alxiw.punkapp.presentation.R
 import io.github.alxiw.punkapp.presentation.beers.model.BeerItemUiModel
+import io.github.alxiw.punkapp.presentation.common.toCleanString
 
 private val AbvColumnWidth = 50.dp
 private val IbuColumnWidth = 58.dp
@@ -465,7 +466,7 @@ internal fun BeerItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = beer.abv,
+                        text = "${beer.abv.toCleanString()}%",
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -484,7 +485,7 @@ internal fun BeerItem(
                                 modifier = Modifier.size(StatIconSize)
                             )
                             Text(
-                                text = ibu,
+                                text = ibu.toCleanString(),
                                 style = MaterialTheme.typography.bodyMedium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -504,7 +505,7 @@ internal fun BeerItem(
                                     .then(ebcMarkerModifier(ebcColor))
                             )
                             Text(
-                                text = ebc,
+                                text = ebc.toCleanString(),
                                 style = MaterialTheme.typography.bodyMedium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -695,9 +696,9 @@ private fun BeerItemPreview() {
                         name = "Lost Lager",
                         tagline = "Dry-Hopped Pilsner.",
                         imageUrl = "https://punkapi.dev/api/v3/images/001.png",
-                        abv = "10.96%",
-                        ibu = "1157",
-                        ebc = "800",
+                        abv = 10.96,
+                        ibu = 1157.0,
+                        ebc = 800.0,
                         firstBrewed = "DEC 2018",
                         description = "A pilsner that combines the light, crisp and clean lager profile provided by Weihenstephan's house yeast, with the vibrant citrus and stonefruit aromas associated with new German hop Saphir.",
                         foodPairing = listOf("Spicy thai curry", "Grilled steak", "Cheesecake"),

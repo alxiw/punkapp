@@ -13,8 +13,8 @@ private const val SATURATION = 0.8f
  * Color marker for the EBC scale; null if the value is unknown.
  * Higher values are darker and less saturated, the same way as the web client does.
  */
-internal fun ebcColorOrNull(ebc: String?): Color? {
-    val value = ebc?.toFloatOrNull() ?: return null
+internal fun ebcColorOrNull(ebc: Double?): Color? {
+    val value = ebc?.toFloat() ?: return null
 
     return Color.hsl(
         hue = max(MIN_HUE, MAX_HUE - value / 5f),

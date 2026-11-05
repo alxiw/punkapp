@@ -7,37 +7,57 @@ data class Beer(
     val firstBrewed: String,
     val description: String,
     val imageUrl: String,
-    val abv: String,
-    val ibu: String,
-    val targetOg: String,
-    val targetFg: String,
-    val ebc: String,
-    val srm: String,
-    val ph: String,
-    val attenuationLevel: String,
-    val volume: String,
-    val boilVolume: String,
+    val abv: Double,
+    val ibu: Double?,
+    val ebc: Double?,
+    val srm: Double?,
+    val foodPairing: List<String>,
+    val isFavorite: Boolean = false,
+    val targetOg: Double?,
+    val targetFg: Double?,
+    val ph: Double?,
+    val attenuationLevel: Double?,
+    val volume: Volume,
+    val boilVolume: Volume,
     val method: Method,
     val ingredients: Ingredients,
-    val foodPairing: List<String>,
     val brewersTips: String,
     val contributedBy: String,
-    val isFavorite: Boolean = false
+)
+
+data class Volume(
+    val value: Int,
+    val unit: String,
 )
 
 data class Method(
-    val mashTemp: List<MashTemp>,
-    val fermentation: Fermentation,
+    val mash: List<MashTemp>,
+    val fermentation: FermentationTemp,
     val twist: List<String>
 )
 
-data class MashTemp(
-    val temp: String,
-    val duration: String?
+data class Temp(
+    val value: Double?,
+    val unit: String,
 )
 
-data class Fermentation(
-    val temp: String
+data class Duration(
+    val value: Int?,
+    val unit: String
+)
+
+data class MashTemp(
+    val temp: Temp,
+    val duration: Duration
+)
+
+data class FermentationTemp(
+    val temp: Temp
+)
+
+data class Amount(
+    val value: Double,
+    val unit: String,
 )
 
 data class Ingredients(
@@ -48,12 +68,12 @@ data class Ingredients(
 
 data class Malt(
     val name: String,
-    val amount: String
+    val amount: Amount
 )
 
 data class Hop(
     val name: String,
-    val amount: String,
+    val amount: Amount,
     val add: String,
     val attribute: String?
 )

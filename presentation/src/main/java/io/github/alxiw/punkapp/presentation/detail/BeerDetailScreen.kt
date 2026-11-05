@@ -52,14 +52,21 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Precision
 import io.github.alxiw.punkapp.presentation.R
+import io.github.alxiw.punkapp.presentation.common.toCleanString
+import io.github.alxiw.punkapp.presentation.common.ValueUnit
+import io.github.alxiw.punkapp.presentation.detail.model.AmountUiModel
 import io.github.alxiw.punkapp.presentation.detail.model.BeerDetailUiModel
 import io.github.alxiw.punkapp.presentation.detail.model.BeerDetailUiState
-import io.github.alxiw.punkapp.presentation.detail.model.FermentationUiModel
+import io.github.alxiw.punkapp.presentation.detail.model.DurationUiModel
+import io.github.alxiw.punkapp.presentation.detail.model.EMPTY_PLACEHOLDER
+import io.github.alxiw.punkapp.presentation.detail.model.FermentationTempUiModel
 import io.github.alxiw.punkapp.presentation.detail.model.HopUiModel
 import io.github.alxiw.punkapp.presentation.detail.model.IngredientsUiModel
 import io.github.alxiw.punkapp.presentation.detail.model.MaltUiModel
 import io.github.alxiw.punkapp.presentation.detail.model.MashTempUiModel
 import io.github.alxiw.punkapp.presentation.detail.model.MethodUiModel
+import io.github.alxiw.punkapp.presentation.detail.model.TempUiModel
+import io.github.alxiw.punkapp.presentation.detail.model.VolumeUiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -262,12 +269,12 @@ private fun BeerDetailContent(
 
             // basics
             DetailSection(stringResource(R.string.header_basics)) {
-                LabelValueRow(stringResource(R.string.volume), beer.volume)
-                LabelValueRow(stringResource(R.string.boil_volume), beer.boilVolume)
-                LabelValueRow(stringResource(R.string.target_fg), beer.targetFg)
-                LabelValueRow(stringResource(R.string.target_og), beer.targetOg)
-                LabelValueRow(stringResource(R.string.ph), beer.ph)
-                LabelValueRow(stringResource(R.string.attenuation_level), beer.attenuationLevel)
+                LabelValueRow(stringResource(R.string.volume), beer.volume.toVolumeText())
+                LabelValueRow(stringResource(R.string.boil_volume), beer.boilVolume.toVolumeText())
+                LabelValueRow(stringResource(R.string.target_fg), beer.targetFg.orPlaceholder())
+                LabelValueRow(stringResource(R.string.target_og), beer.targetOg.orPlaceholder())
+                LabelValueRow(stringResource(R.string.ph), beer.ph.orPlaceholder())
+                LabelValueRow(stringResource(R.string.attenuation_level), beer.attenuationLevel.formatPercentageOrPlaceholder())
             }
 
             BeerMethodSection(beer.method)
@@ -385,15 +392,15 @@ private fun BeerHeroSection(
                 ) {
                     StatItem(
                         title = stringResource(R.string.abv),
-                        value = beer.abv
+                        value = "${beer.abv.toCleanString()}%"
                     )
                     StatItem(
                         title = stringResource(R.string.ibu),
-                        value = beer.ibu
+                        value = beer.ibu.orPlaceholder()
                     )
                     StatItem(
                         title = stringResource(R.string.ebc),
-                        value = beer.ebc
+                        value = beer.ebc.orPlaceholder()
                     )
                 }
             }
@@ -401,20 +408,30 @@ private fun BeerHeroSection(
     }
 }
 
+internal fun Double?.orPlaceholder(): String {
+    if (this == null) return EMPTY_PLACEHOLDER
+
+    return this.toCleanString()
+}
+
+internal fun Double?.formatPercentageOrPlaceholder(): String {
+    return this?.let { "${it.toCleanString()}%" } ?: EMPTY_PLACEHOLDER
+}
+
 @Composable
 private fun BeerMethodSection(method: MethodUiModel) {
     DetailSection(stringResource(R.string.header_method)) {
         method.mashTemp.forEachIndexed { index, mash ->
-            val text = if (mash.duration.isNullOrBlank()) {
-                mash.temp
+            val text = if (mash.duration.value == null) {
+                "${mash.temp.value?.toCleanString()}" + ValueUnit.convertToDisplayName(mash.temp.unit)
             } else {
-                "${mash.temp} (${mash.duration})"
+                "${mash.temp.value?.toCleanString()}${ValueUnit.convertToDisplayName(mash.temp.unit)} (${mash.duration.value} ${ValueUnit.convertToDisplayName(mash.duration.unit)})"
             }
             val label = if (index == 0) stringResource(R.string.mash) else ""
             LabelValueRow(label, text, 0.5f, 1.5f)
         }
         method.fermentation.temp.let {
-            LabelValueRow(stringResource(R.string.fermentation), it)
+            LabelValueRow(stringResource(R.string.fermentation), "${it.value?.toCleanString()}" + ValueUnit.convertToDisplayName(it.unit))
         }
         if (method.twist.isNotEmpty()) {
             method.twist.forEachIndexed { index, twist ->
@@ -436,7 +453,8 @@ private fun BeerIngredientsSection(ingredients: IngredientsUiModel) {
             if (isMaltNotEmpty) {
                 IngredientSubSection(stringResource(R.string.malt)) {
                     ingredients.malt.forEach { malt ->
-                        LabelValueRow(malt.name, malt.amount, 1f, 0.7f)
+                        val value = malt.amount.value.toCleanString() + ValueUnit.convertToDisplayName(malt.amount.unit)
+                        LabelValueRow(malt.name, value, 1f, 0.7f)
                     }
                 }
             }
@@ -449,7 +467,8 @@ private fun BeerIngredientsSection(ingredients: IngredientsUiModel) {
                         } else {
                             "${hop.name} (${hop.add}, ${hop.attribute})"
                         }
-                        LabelValueRow(label, hop.amount, 1.5f, 0.5f)
+                        val value = hop.amount.value.toCleanString() + ValueUnit.convertToDisplayName(hop.amount.unit)
+                        LabelValueRow(label, value, 1.5f, 0.5f)
                     }
                 }
             }
@@ -565,24 +584,30 @@ private fun BeerDetailContentPreview() {
         firstBrewed = "DECEMBER 2018",
         description = "A pilsner that combines the light, crisp and clean lager profile provided by Weihenstephan's house yeast, with the vibrant citrus and stonefruit aromas associated with new German hop Saphir. This lager is easy-going but has subtle depths; toast, hints of spice and a zesty lime marmalade character.",
         imageUrl = "https://punkapi.dev/api/v3/images/366.png",
-        abv = "4.5",
-        ibu = "37",
-        targetOg = "1056",
-        targetFg = "1010",
-        ebc = "5",
-        srm = "8.5",
-        ph = "4.4",
-        attenuationLevel = "82.1",
-        volume = "20L",
-        boilVolume = "25L",
+        abv = 4.5,
+        ibu = 37.0,
+        ebc = 5.0,
+        srm = 8.5,
+        targetOg = 1056.0,
+        targetFg = 1010.0,
+        ph = 4.4,
+        attenuationLevel = 82.1,
+        volume = VolumeUiModel(
+            value = 20,
+            unit = "L"
+        ),
+        boilVolume = VolumeUiModel(
+            value = 25,
+            unit = "L"
+        ),
         method = MethodUiModel(
-            mashTemp = listOf(MashTempUiModel("65°C", "75")),
-            fermentation = FermentationUiModel("19°C"),
+            mashTemp = listOf(MashTempUiModel(TempUiModel(65.0, "celsius"), DurationUiModel(75, "minutes"))),
+            fermentation = FermentationTempUiModel(TempUiModel(19.0, "celsius")),
             twist = emptyList()
         ),
         ingredients = IngredientsUiModel(
-            malt = listOf(MaltUiModel("Extra Pale", "5.3kg")),
-            hops = listOf(HopUiModel("Citra", "12.5g", "start", "bitter")),
+            malt = listOf(MaltUiModel("Extra Pale", AmountUiModel(5.3, "kg"))),
+            hops = listOf(HopUiModel("Citra", AmountUiModel(12.5, "g"), "start", "bitter")),
             yeast = "Wyeast 1056"
         ),
         foodPairing = listOf("Spicy thai curry", "Grilled steak", "Cheesecake"),

@@ -1,10 +1,11 @@
-package io.github.alxiw.punkapp.data.remote.util
+package io.github.alxiw.punkapp.presentation.common
 
 internal enum class ValueUnit(val fullName: String, val displayName: String) {
     LITERS("litres", "L"),
     GRAMS("grams", "g"),
     KILOGRAMS("kilograms", "kg"),
-    CELSIUS("celsius", "°C");
+    CELSIUS("celsius", "°C"),
+    MINUTES("minutes", "min");
 
     companion object {
         fun convertToDisplayName(fullName: String): String {
