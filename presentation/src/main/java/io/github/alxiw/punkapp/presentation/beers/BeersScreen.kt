@@ -10,7 +10,6 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,14 +79,16 @@ import coil.request.ImageRequest
 import coil.size.Precision
 import io.github.alxiw.punkapp.presentation.R
 import io.github.alxiw.punkapp.presentation.beers.model.BeerItemUiModel
+import io.github.alxiw.punkapp.presentation.common.EbcMarkerSize
+import io.github.alxiw.punkapp.presentation.common.EbcMarkerSpacing
+import io.github.alxiw.punkapp.presentation.common.ebcColorOrNull
+import io.github.alxiw.punkapp.presentation.common.ebcMarkerModifier
 import io.github.alxiw.punkapp.presentation.common.toCleanString
 
 private val AbvColumnWidth = 50.dp
 private val IbuColumnWidth = 58.dp
 private val EbcColumnWidth = 58.dp
 private val StatIconSize = 16.dp
-private val StatMarkerSize = 10.dp
-private val StatMarkerSpacing = 2.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -495,14 +496,14 @@ internal fun BeerItem(
 
                     Row(
                         modifier = Modifier.width(EbcColumnWidth),
-                        horizontalArrangement = Arrangement.spacedBy(StatMarkerSpacing),
+                        horizontalArrangement = Arrangement.spacedBy(EbcMarkerSpacing),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         beer.ebc?.let { ebc ->
                             Box(
                                 modifier = Modifier
-                                    .size(StatMarkerSize)
-                                    .then(ebcMarkerModifier(ebcColor))
+                                    .size(EbcMarkerSize)
+                                    .ebcMarkerModifier(ebcColor)
                             )
                             Text(
                                 text = ebc.toCleanString(),
@@ -556,19 +557,6 @@ internal fun BeerItem(
             )
         }
     }
-}
-
-@Composable
-private fun ebcMarkerModifier(color: Color?): Modifier {
-    if (color == null) return Modifier
-
-    return Modifier
-        .background(color = color, shape = CircleShape)
-        .border(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant,
-            shape = CircleShape
-        )
 }
 
 @Composable

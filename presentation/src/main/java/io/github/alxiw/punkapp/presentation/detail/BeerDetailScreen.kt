@@ -34,6 +34,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +53,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Precision
 import io.github.alxiw.punkapp.presentation.R
+import io.github.alxiw.punkapp.presentation.common.EbcMarkerSize
+import io.github.alxiw.punkapp.presentation.common.EbcMarkerSpacing
+import io.github.alxiw.punkapp.presentation.common.ebcColorOrNull
+import io.github.alxiw.punkapp.presentation.common.ebcMarkerModifier
 import io.github.alxiw.punkapp.presentation.common.toCleanString
 import io.github.alxiw.punkapp.presentation.common.ValueUnit
 import io.github.alxiw.punkapp.presentation.detail.model.AmountUiModel
@@ -325,6 +330,8 @@ private fun BeerHeroSection(
     sharedTransitionScope: SharedTransitionScope,
     paddingValues: PaddingValues
 ) {
+    val ebcColor = remember(beer.ebc) { ebcColorOrNull(beer.ebc) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -400,7 +407,8 @@ private fun BeerHeroSection(
                     )
                     StatItem(
                         title = stringResource(R.string.ebc),
-                        value = beer.ebc.orPlaceholder()
+                        value = beer.ebc.orPlaceholder(),
+                        markerColor = ebcColor
                     )
                 }
             }
@@ -486,7 +494,8 @@ private fun BeerIngredientsSection(ingredients: IngredientsUiModel) {
 private fun StatItem(
     title: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    markerColor: Color? = null
 ) {
     Column(
         modifier = modifier,
@@ -497,12 +506,24 @@ private fun StatItem(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(EbcMarkerSpacing)
+        ) {
+            if (markerColor != null) {
+                Box(
+                    modifier = Modifier
+                        .size(EbcMarkerSize)
+                        .ebcMarkerModifier(markerColor)
+                )
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
