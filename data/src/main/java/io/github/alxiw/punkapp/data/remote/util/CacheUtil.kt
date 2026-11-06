@@ -19,16 +19,13 @@ internal object CacheUtil {
     }
 
     fun calculateDiskCacheSize(dir: File): Long {
-        var size = MIN_DISK_CACHE_SIZE.toLong()
-
-        try {
+        val calculatedSize = try {
             val statFs = StatFs(dir.absolutePath)
-            val blockCount = statFs.blockCountLong
-            val blockSize = statFs.blockSizeLong
-            val available = blockCount * blockSize
-            size = available / 50
-        } catch (ignored: IllegalArgumentException) { /* do nothing */ }
+            (statFs.blockCountLong * statFs.blockSizeLong) / 50
+        } catch (_: IllegalArgumentException) {
+            MIN_DISK_CACHE_SIZE.toLong()
+        }
 
-        return size.coerceIn(MIN_DISK_CACHE_SIZE.toLong(), MAX_DISK_CACHE_SIZE.toLong())
+        return calculatedSize.coerceIn(MIN_DISK_CACHE_SIZE.toLong(), MAX_DISK_CACHE_SIZE.toLong())
     }
 }
