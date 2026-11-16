@@ -1,5 +1,6 @@
 package io.github.alxiw.punkapp.presentation.beers
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -29,6 +30,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.Button
@@ -37,6 +39,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -90,6 +93,13 @@ private val IbuColumnWidth = 58.dp
 private val EbcColumnWidth = 58.dp
 private val StatIconSize = 16.dp
 
+private const val FILTERS_LOG_TAG = "BeersScreen"
+
+private val FilterActiveColor = Color(0xFF4CAF50)
+
+// Slot reserved for a 48dp IconButton plus its 8dp outer padding
+private val AppBarButtonSlot = 56.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BeersScreen(
@@ -106,6 +116,7 @@ fun BeersScreen(
     var searchQuery by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(viewModel.initialQuery))
     }
+    var isFilterActive by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     var shouldRequestFocus by remember { mutableStateOf(false) }
     var previewBeerId by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -169,6 +180,27 @@ fun BeersScreen(
                                 Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
                             }
                         }
+                        IconButton(
+                            onClick = {
+                                isFilterActive = !isFilterActive
+                                Log.d(
+                                    FILTERS_LOG_TAG,
+                                    if (isFilterActive) "Filters applied" else "Filters reset"
+                                )
+                            },
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Filters",
+                                tint = if (isFilterActive) FilterActiveColor else LocalContentColor.current
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
@@ -180,7 +212,10 @@ fun BeersScreen(
                     visible = isSearchActive,
                     enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),
                     exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut(),
-                    modifier = Modifier.fillMaxWidth()
+                    // Leave the Favorites (start) and Filters (end) buttons visible and clickable
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = AppBarButtonSlot, end = AppBarButtonSlot)
                 ) {
                     BeersSearchBar(
                         query = searchQuery,
