@@ -65,6 +65,7 @@ private const val MIN_BREWED_YEAR = 1900
 /**
  * Full-screen dialog to edit [AdvancedFilters]. The fields are edited in a local state:
  * [onDismissRequest] closes the dialog without saving it, [onApply] gets the validated result.
+ * "Apply" is available only when the fields hold no errors and differ from [filters].
  */
 @Composable
 internal fun AdvancedFiltersDialog(
@@ -121,6 +122,22 @@ private fun AdvancedFiltersScreen(
         (brewedBefore.isNotEmpty() && beforeDate == null)
     val hasValues = listOf(abvGt, abvLt, ibuGt, ibuLt, ebcGt, ebcLt, brewedAfter, brewedBefore, food)
         .any { it.isNotEmpty() }
+
+    // The fields hold texts, so the same filters can be represented differently ("8" and "8.0",
+    // " Stout " and "Stout"). The result is normalized the same way as on apply, so the button
+    // stays disabled while the screen does not change the accepted filters.
+    val editedFilters = AdvancedFilters(
+        abvGt = abvGt.toDoubleOrNull(),
+        abvLt = abvLt.toDoubleOrNull(),
+        ibuGt = ibuGt.toDoubleOrNull(),
+        ibuLt = ibuLt.toDoubleOrNull(),
+        ebcGt = ebcGt.toDoubleOrNull(),
+        ebcLt = ebcLt.toDoubleOrNull(),
+        brewedAfter = afterDate,
+        brewedBefore = beforeDate,
+        food = food.trim().ifEmpty { null },
+    )
+    val hasChanges = editedFilters != filters
 
     Surface(
         modifier = Modifier
@@ -194,22 +211,8 @@ private fun AdvancedFiltersScreen(
                         )
                 ) {
                     Button(
-                        onClick = {
-                            onApply(
-                                AdvancedFilters(
-                                    abvGt = abvGt.toDoubleOrNull(),
-                                    abvLt = abvLt.toDoubleOrNull(),
-                                    ibuGt = ibuGt.toDoubleOrNull(),
-                                    ibuLt = ibuLt.toDoubleOrNull(),
-                                    ebcGt = ebcGt.toDoubleOrNull(),
-                                    ebcLt = ebcLt.toDoubleOrNull(),
-                                    brewedAfter = afterDate,
-                                    brewedBefore = beforeDate,
-                                    food = food.trim().ifEmpty { null },
-                                )
-                            )
-                        },
-                        enabled = !hasErrors,
+                        onClick = { onApply(editedFilters) },
+                        enabled = !hasErrors && hasChanges,
                         shape = CircleShape,
                         modifier = Modifier
                             .fillMaxWidth()
