@@ -197,7 +197,7 @@ private fun FavoriteAction(
             } else {
                 painterResource(id = R.drawable.ic_heart_outline)
             },
-            contentDescription = "Favorite",
+            contentDescription = stringResource(R.string.like),
             tint = if (isFavorite) colorResource(R.color.favorite) else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(32.dp)
         )

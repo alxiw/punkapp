@@ -31,10 +31,12 @@ internal class BeerPagingSource(
                 val beers = data.map {
                     it.toBeer().copy(isFavorite = favorites.contains(it.id))
                 }
+                // The API fills a page up to `per_page`, so a short page means the data is exhausted
+                val isLastPage = data.size < BeersRemoteDataSource.PAGE_SIZE
                 LoadResult.Page(
                     data = beers,
                     prevKey = if (page == 1) null else page - 1,
-                    nextKey = if (beers.isEmpty()) null else page + 1
+                    nextKey = if (isLastPage) null else page + 1
                 )
             },
             onFailure = {

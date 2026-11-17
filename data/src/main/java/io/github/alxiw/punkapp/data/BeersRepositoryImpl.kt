@@ -30,7 +30,7 @@ internal class BeersRepositoryImpl @Inject constructor(
         emitAll(
             Pager(
                 config = PagingConfig(
-                    pageSize = PAGE_SIZE,
+                    pageSize = BeersRemoteDataSource.PAGE_SIZE,
                     enablePlaceholders = false
                 ),
                 pagingSourceFactory = { BeerPagingSource(filter, ids, remoteDataSource, localDataSource) }
@@ -51,9 +51,5 @@ internal class BeersRepositoryImpl @Inject constructor(
         } else {
             localDataSource.addFavorite(id)
         }
-    }
-
-    companion object {
-        private const val PAGE_SIZE = 30
     }
 }

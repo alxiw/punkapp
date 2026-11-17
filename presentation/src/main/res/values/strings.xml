@@ -1,20 +1,21 @@
 <resources>
-    <!-- Directions -->
+    <!-- Actions -->
     <string name="search">Search</string>
     <string name="filters">Filters</string>
     <string name="favorites">Favorites</string>
     <string name="preview">Preview</string>
     <string name="recipe">Recipe</string>
     <string name="back">Back</string>
+    <string name="reset_filters">Reset filters</string>
     <string name="apply">Apply</string>
+    <string name="like">Like</string>
+    <string name="retry">Retry</string>
 
     <!-- States -->
-    <string name="retry">Retry</string>
     <string name="empty">No beers 😔</string>
 
     <!-- Beer Filters -->
     <string name="search_hint">Search…</string>
-    <string name="reset_filters">Reset filters</string>
     <string name="header_strength">STRENGTH, ABV</string>
     <string name="header_bitterness">BITTERNESS, IBU</string>
     <string name="header_color">COLOR, EBC</string>
@@ -22,7 +23,7 @@
     <string name="less_than">less than</string>
     <string name="brewed_from_hint">from MM.YYYY</string>
     <string name="brewed_to_hint">to MM.YYYY</string>
-    <string name="food_hint">e.g., chocolate, fish, cheese...</string>
+    <string name="food_hint">e.g., chocolate, fish, cheese…</string>
 
     <!-- Beer Recipe -->
     <string name="first_brewed">FIRST BREWED</string>

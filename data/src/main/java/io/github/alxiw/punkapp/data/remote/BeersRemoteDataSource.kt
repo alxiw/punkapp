@@ -18,6 +18,8 @@ internal class BeersRemoteDataSource @Inject constructor(
      * @param ids restrict the result to these beers; `null` means "don't send ids at all".
      * Callers must not pass an empty list - an empty `ids` would be dropped by the API
      * and return every beer.
+     *
+     * The page size is always [PAGE_SIZE], so a page with fewer items means the last page.
      */
     suspend fun getBeers(
         filter: BeersFilter,
@@ -27,6 +29,7 @@ internal class BeersRemoteDataSource @Inject constructor(
         require(ids == null || ids.isNotEmpty()) { "ids must not be empty" }
         val response = service.getBeers(
             page = page,
+            perPage = PAGE_SIZE,
             beerName = filter.query.toApiValue(),
             abvGt = filter.abvGt,
             abvLt = filter.abvLt,
@@ -62,4 +65,9 @@ internal class BeersRemoteDataSource @Inject constructor(
 
     // The API expects words joined with underscores; empty values are not sent at all
     private fun String.toApiValue(): String? = if (isEmpty()) null else replace(' ', '_')
+
+    companion object {
+        /** Items per page requested from the API; it must stay within the API's 10..80 range. */
+        const val PAGE_SIZE = 30
+    }
 }

@@ -13,6 +13,7 @@ internal interface BeersSearchService {
     @GET("beers")
     suspend fun getBeers(
         @Query("page") page: Int,
+        @Query("per_page") perPage: Int,
         @Query("beer_name") beerName: String?,
         @Query("abv_gt") abvGt: Double?,
         @Query("abv_lt") abvLt: Double?,
