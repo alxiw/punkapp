@@ -96,8 +96,16 @@ class BeersViewModel @Inject constructor(
         savedStateHandle[FAVORITE_ONLY_KEY] = !isFavoriteOnly.value
     }
 
+    internal fun onFavoriteFilterReset() {
+        savedStateHandle[FAVORITE_ONLY_KEY] = false
+    }
+
     internal fun onAdvancedFiltersApply(filters: AdvancedFilters) {
         _advancedFilters.value = filters
+    }
+
+    internal fun onAdvancedFiltersReset() {
+        _advancedFilters.value = AdvancedFilters()
     }
 
     internal fun onFavoriteClick(id: Int) {

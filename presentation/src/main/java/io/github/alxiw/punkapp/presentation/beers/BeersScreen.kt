@@ -146,11 +146,26 @@ fun BeersScreen(
     var previewBeerId by rememberSaveable { mutableStateOf<Int?>(null) }
     var isFiltersDialogVisible by rememberSaveable { mutableStateOf(false) }
 
-    BackHandler(enabled = isSearchActive) {
+    val dismissSearch = {
         isSearchActive = false
         isSearchFocused = false
         searchQuery = TextFieldValue("")
         viewModel.accept("")
+    }
+
+    // A back press unwinds the applied state one layer at a time, from the most transient to the
+    // most persistent one: the search, then the filters, then the favorites-only mode. When none
+    // of them is active the handler is disabled and the default behavior is kept (closing the
+    // screen). The keyboard is dismissed by the system before the handler is called, so an open
+    // keyboard still takes the first back press.
+    BackHandler(
+        enabled = isSearchActive || advancedFilters.isActive || isFavoriteFilterActive
+    ) {
+        when {
+            isSearchActive -> dismissSearch()
+            advancedFilters.isActive -> viewModel.onAdvancedFiltersReset()
+            isFavoriteFilterActive -> viewModel.onFavoriteFilterReset()
+        }
     }
 
     LaunchedEffect(searchQuery) {
@@ -261,12 +276,7 @@ fun BeersScreen(
                         onFocusChange = { isFocused ->
                             if (isFocused) isSearchFocused = true
                         },
-                        onCloseClick = {
-                            isSearchActive = false
-                            isSearchFocused = false
-                            searchQuery = TextFieldValue("")
-                            viewModel.accept("")
-                        },
+                        onCloseClick = dismissSearch,
                         focusRequester = focusRequester
                     )
                 }
