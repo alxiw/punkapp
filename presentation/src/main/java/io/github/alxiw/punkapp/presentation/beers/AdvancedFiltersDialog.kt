@@ -37,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -120,7 +121,11 @@ private fun AdvancedFiltersScreen(
         .any { it.isNotEmpty() }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            // Shrinks the whole screen above the keyboard: the bottom bar stays visible and the
+            // scrollable content keeps the focused field out of the keyboard area.
+            .imePadding(),
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
@@ -171,9 +176,20 @@ private fun AdvancedFiltersScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        // The content scrolls under the button: the bar fades from fully
+                        // transparent at the top to the screen background color at the bottom.
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
+                            )
+                        )
                         .navigationBarsPadding()
-                        .imePadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(
+                            start = 16.dp,
+                            top = 24.dp,
+                            end = 16.dp,
+                            bottom = 12.dp
+                        )
                 ) {
                     Button(
                         onClick = {
@@ -209,9 +225,15 @@ private fun AdvancedFiltersScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                    // The top and the bottom bars are transparent, so the content scrolls under
+                    // them and their heights are reserved inside the scrollable content.
+                    .padding(
+                        start = 16.dp,
+                        top = paddingValues.calculateTopPadding(),
+                        end = 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp
+                    )
             ) {
                 NumberRangeSection(
                     title = stringResource(R.string.header_strength),
