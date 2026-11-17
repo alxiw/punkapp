@@ -1,6 +1,5 @@
 package io.github.alxiw.punkapp.presentation.beers
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -62,7 +60,7 @@ class BeersViewModel @Inject constructor(
      * All inputs are merged into a single [BeersFilter]. It's the only thing the data layer sees:
      * any change of it that makes a difference restarts paging with the new request.
      * `distinctUntilChanged` makes sure that changes which don't affect the request
-     * (e.g. switching empty advanced filters on) don't trigger a reload.
+     * (e.g. applying the same filters again) don't trigger a reload.
      */
     @OptIn(FlowPreview::class)
     private val beersFilter: Flow<BeersFilter> = combine(
@@ -98,9 +96,8 @@ class BeersViewModel @Inject constructor(
         savedStateHandle[FAVORITE_ONLY_KEY] = !isFavoriteOnly.value
     }
 
-    internal fun onAdvancedFiltersToggle() {
-        _advancedFilters.update { it.copy(isActive = !it.isActive) }
-        Log.d(TAG, if (_advancedFilters.value.isActive) "Filters applied" else "Filters reset")
+    internal fun onAdvancedFiltersApply(filters: AdvancedFilters) {
+        _advancedFilters.value = filters
     }
 
     internal fun onFavoriteClick(id: Int) {
@@ -110,7 +107,6 @@ class BeersViewModel @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "BeersViewModel"
         private const val SEARCH_QUERY_KEY: String = "last_search_query"
         private const val FAVORITE_ONLY_KEY: String = "favorite_only"
         private const val DEFAULT_QUERY = ""

@@ -4,6 +4,8 @@ import io.github.alxiw.punkapp.data.remote.api.BeersSearchService
 import io.github.alxiw.punkapp.data.remote.model.BeerResponse
 import io.github.alxiw.punkapp.domain.model.BeersFilter
 import java.io.IOException
+import java.time.YearMonth
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,6 +34,8 @@ internal class BeersRemoteDataSource @Inject constructor(
             ibuLt = filter.ibuLt,
             ebcGt = filter.ebcGt,
             ebcLt = filter.ebcLt,
+            brewedAfter = filter.brewedAfter?.toApiValue(),
+            brewedBefore = filter.brewedBefore?.toApiValue(),
             food = filter.food?.toApiValue(),
             ids = ids?.joinToString(","),
         )
@@ -52,6 +56,9 @@ internal class BeersRemoteDataSource @Inject constructor(
         onSuccess = { Result.success(it) },
         onFailure = { Result.failure(IOException("Network error while getting beer data by id $id", it)) }
     )
+
+    // The API expects dates as MM-YYYY
+    private fun YearMonth.toApiValue(): String = String.format(Locale.ROOT, "%02d-%04d", monthValue, year)
 
     // The API expects words joined with underscores; empty values are not sent at all
     private fun String.toApiValue(): String? = if (isEmpty()) null else replace(' ', '_')

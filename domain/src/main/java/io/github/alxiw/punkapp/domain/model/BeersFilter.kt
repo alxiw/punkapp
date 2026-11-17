@@ -1,5 +1,7 @@
 package io.github.alxiw.punkapp.domain.model
 
+import java.time.YearMonth
+
 /**
  * All parameters the beers list can be filtered by.
  * `null` / blank values mean "no restriction" and are not sent to the API at all.
@@ -15,6 +17,8 @@ data class BeersFilter(
     val ibuLt: Double? = null,
     val ebcGt: Double? = null,
     val ebcLt: Double? = null,
+    val brewedAfter: YearMonth? = null,
+    val brewedBefore: YearMonth? = null,
     val food: String? = null,
     val favoritesOnly: Boolean = false,
 )

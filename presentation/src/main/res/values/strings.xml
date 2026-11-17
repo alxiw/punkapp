@@ -5,6 +5,8 @@
     <string name="favorites">Favorites</string>
     <string name="preview">Preview</string>
     <string name="recipe">Recipe</string>
+    <string name="back">Back</string>
+    <string name="apply">Apply</string>
 
     <!-- States -->
     <string name="retry">Retry</string>
@@ -12,6 +14,15 @@
 
     <!-- Beer Filters -->
     <string name="search_hint">Search…</string>
+    <string name="reset_filters">Reset filters</string>
+    <string name="header_strength">STRENGTH, ABV</string>
+    <string name="header_bitterness">BITTERNESS, IBU</string>
+    <string name="header_color">COLOR, EBC</string>
+    <string name="more_than">more than</string>
+    <string name="less_than">less than</string>
+    <string name="brewed_from_hint">from MM.YYYY</string>
+    <string name="brewed_to_hint">to MM.YYYY</string>
+    <string name="food_hint">e.g., chocolate, fish, cheese...</string>
 
     <!-- Beer Recipe -->
     <string name="first_brewed">FIRST BREWED</string>

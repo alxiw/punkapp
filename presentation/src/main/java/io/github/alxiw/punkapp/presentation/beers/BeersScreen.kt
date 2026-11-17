@@ -144,6 +144,7 @@ fun BeersScreen(
     val windowInfo = LocalWindowInfo.current
     var shouldRequestFocus by remember { mutableStateOf(false) }
     var previewBeerId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var isFiltersDialogVisible by rememberSaveable { mutableStateOf(false) }
 
     BackHandler(enabled = isSearchActive) {
         isSearchActive = false
@@ -181,6 +182,17 @@ fun BeersScreen(
     }
 
     ImeVisibilityOnPauseObserver { isImeVisible -> wasImeVisibleByPause = isImeVisible }
+
+    if (isFiltersDialogVisible) {
+        AdvancedFiltersDialog(
+            filters = advancedFilters,
+            onDismissRequest = { isFiltersDialogVisible = false },
+            onApply = { filters ->
+                viewModel.onAdvancedFiltersApply(filters)
+                isFiltersDialogVisible = false
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -224,7 +236,7 @@ fun BeersScreen(
                             imageVector = Icons.Default.FilterList,
                             contentDescription = stringResource(R.string.filters),
                             isActive = advancedFilters.isActive,
-                            onClick = viewModel::onAdvancedFiltersToggle,
+                            onClick = { isFiltersDialogVisible = true },
                             modifier = Modifier.padding(end = 8.dp)
                         )
                     },

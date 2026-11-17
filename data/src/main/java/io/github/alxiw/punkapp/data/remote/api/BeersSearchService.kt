@@ -20,6 +20,8 @@ internal interface BeersSearchService {
         @Query("ibu_lt") ibuLt: Double?,
         @Query("ebc_gt") ebcGt: Double?,
         @Query("ebc_lt") ebcLt: Double?,
+        @Query("brewed_after") brewedAfter: String?,
+        @Query("brewed_before") brewedBefore: String?,
         @Query("food") food: String?,
         @Query("ids", encoded = true) ids: String?,
     ): Response<List<BeerResponse>>
