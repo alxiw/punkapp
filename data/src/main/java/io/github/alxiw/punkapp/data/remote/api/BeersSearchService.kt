@@ -9,16 +9,19 @@ import retrofit2.http.Query
 
 internal interface BeersSearchService {
 
+    /** Every nullable query parameter is omitted from the url when it is `null`. */
     @GET("beers")
     suspend fun getBeers(
+        @Query("page") page: Int,
         @Query("beer_name") beerName: String?,
-        @Query("page") page: Int
-    ): Response<List<BeerResponse>>
-
-    @GET("beers")
-    suspend fun getBeersByIds(
-        @Query("ids", encoded = true) ids: String,
-        @Query("page") page: Int
+        @Query("abv_gt") abvGt: Double?,
+        @Query("abv_lt") abvLt: Double?,
+        @Query("ibu_gt") ibuGt: Double?,
+        @Query("ibu_lt") ibuLt: Double?,
+        @Query("ebc_gt") ebcGt: Double?,
+        @Query("ebc_lt") ebcLt: Double?,
+        @Query("food") food: String?,
+        @Query("ids", encoded = true) ids: String?,
     ): Response<List<BeerResponse>>
 
     @GET("beers/{id}")

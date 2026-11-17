@@ -1,14 +1,19 @@
 <resources>
-    <!-- Beers Search -->
+    <!-- Directions -->
+    <string name="search">Search</string>
+    <string name="filters">Filters</string>
+    <string name="favorites">Favorites</string>
+    <string name="preview">Preview</string>
+    <string name="recipe">Recipe</string>
+
+    <!-- States -->
     <string name="retry">Retry</string>
     <string name="empty">No beers 😔</string>
-    <string name="favorites">Favorites</string>
+
+    <!-- Beer Filters -->
     <string name="search_hint">Search…</string>
 
-    <!-- Beer Preview -->
-    <string name="preview">Preview</string>
-
-    <!-- Beer Detail -->
+    <!-- Beer Recipe -->
     <string name="first_brewed">FIRST BREWED</string>
     <string name="abv">ABV</string>
     <string name="ibu">IBU</string>

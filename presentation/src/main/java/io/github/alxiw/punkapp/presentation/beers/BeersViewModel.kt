@@ -1,64 +1,87 @@
 package io.github.alxiw.punkapp.presentation.beers
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.alxiw.punkapp.domain.GetBeersFlowUseCase
 import io.github.alxiw.punkapp.domain.GetFavoriteIdsFlowUseCase
 import io.github.alxiw.punkapp.domain.ToggleFavoriteUseCase
+import io.github.alxiw.punkapp.domain.model.BeersFilter
 import io.github.alxiw.punkapp.presentation.beers.model.BeerItemUiModel
 import io.github.alxiw.punkapp.presentation.beers.model.toItemUiModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class BeersViewModel @Inject constructor(
-    getBeersFlowUseCase: GetBeersFlowUseCase,
+    private val getBeersFlowUseCase: GetBeersFlowUseCase,
     getFavoriteIdsFlowUseCase: GetFavoriteIdsFlowUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    val initialQuery: String = savedStateHandle[LAST_SEARCH_QUERY_KEY] ?: DEFAULT_QUERY
+    // region Filter inputs: one flow per filtering parameter
 
-    private val actionStateFlow = MutableSharedFlow<String>()
+    internal val initialQuery: String = savedStateHandle[SEARCH_QUERY_KEY] ?: DEFAULT_QUERY
 
+    private val searchQuery: StateFlow<String> =
+        savedStateHandle.getStateFlow(SEARCH_QUERY_KEY, DEFAULT_QUERY)
+
+    internal val isFavoriteOnly: StateFlow<Boolean> =
+        savedStateHandle.getStateFlow(FAVORITE_ONLY_KEY, false)
+
+    private val _advancedFilters = MutableStateFlow(AdvancedFilters())
+    internal val advancedFilters: StateFlow<AdvancedFilters> = _advancedFilters.asStateFlow()
+
+    // endregion
+
+    // region Filtering pipeline
+
+    /**
+     * All inputs are merged into a single [BeersFilter]. It's the only thing the data layer sees:
+     * any change of it that makes a difference restarts paging with the new request.
+     * `distinctUntilChanged` makes sure that changes which don't affect the request
+     * (e.g. switching empty advanced filters on) don't trigger a reload.
+     */
     @OptIn(FlowPreview::class)
-    private val searches = actionStateFlow
-        .onStart { emit(initialQuery) }
+    private val beersFilter: Flow<BeersFilter> = combine(
+        searchQuery.debounce(SEARCH_DEBOUNCE).distinctUntilChanged(),
+        isFavoriteOnly,
+        advancedFilters
+    ) { query, favoriteOnly, advanced ->
+        advanced.applyTo(BeersFilter(query = query, favoritesOnly = favoriteOnly))
+    }
         .distinctUntilChanged()
-        .debounce(300.milliseconds)
 
-    private val state: StateFlow<String> = searches
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-            initialValue = DEFAULT_QUERY
-        )
-
+    /** The UI only renders what comes out of this flow. */
     @OptIn(ExperimentalCoroutinesApi::class)
-    internal val beersFlow: Flow<PagingData<BeerItemUiModel>> = searches
-        .flatMapLatest { query -> getBeersFlowUseCase(query) }
+    internal val beersFlow: Flow<PagingData<BeerItemUiModel>> = beersFilter
+        .flatMapLatest { filter -> getBeersFlowUseCase(filter) }
         .map { pagingData -> pagingData.map { beer -> beer.toItemUiModel() } }
         .cachedIn(viewModelScope)
+
+    // endregion
 
     internal val favoriteIds: StateFlow<Set<Int>> = getFavoriteIdsFlowUseCase()
         .stateIn(
@@ -67,23 +90,30 @@ class BeersViewModel @Inject constructor(
             initialValue = emptySet()
         )
 
-    fun accept(query: String) {
-        viewModelScope.launch { actionStateFlow.emit(query) }
+    internal fun accept(query: String) {
+        savedStateHandle[SEARCH_QUERY_KEY] = query
     }
 
-    fun onFavoriteClick(id: Int) {
+    internal fun onFavoriteFilterToggle() {
+        savedStateHandle[FAVORITE_ONLY_KEY] = !isFavoriteOnly.value
+    }
+
+    internal fun onAdvancedFiltersToggle() {
+        _advancedFilters.update { it.copy(isActive = !it.isActive) }
+        Log.d(TAG, if (_advancedFilters.value.isActive) "Filters applied" else "Filters reset")
+    }
+
+    internal fun onFavoriteClick(id: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             toggleFavoriteUseCase(id)
         }
     }
 
-    override fun onCleared() {
-        savedStateHandle[LAST_SEARCH_QUERY_KEY] = state.value
-        super.onCleared()
-    }
-
     companion object {
-        private const val LAST_SEARCH_QUERY_KEY: String = "last_search_query"
+        private const val TAG = "BeersViewModel"
+        private const val SEARCH_QUERY_KEY: String = "last_search_query"
+        private const val FAVORITE_ONLY_KEY: String = "favorite_only"
         private const val DEFAULT_QUERY = ""
+        private val SEARCH_DEBOUNCE = 300.milliseconds
     }
 }

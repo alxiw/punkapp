@@ -1,6 +1,5 @@
 package io.github.alxiw.punkapp.presentation.beers
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -60,6 +59,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -93,10 +93,6 @@ private val IbuColumnWidth = 58.dp
 private val EbcColumnWidth = 58.dp
 private val StatIconSize = 16.dp
 
-private const val FILTERS_LOG_TAG = "BeersScreen"
-
-private val FilterActiveColor = Color(0xFF4CAF50)
-
 // Slot reserved for a 48dp IconButton plus its 8dp outer padding
 private val AppBarButtonSlot = 56.dp
 
@@ -107,16 +103,16 @@ fun BeersScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
     onBeerClick: (Int) -> Unit,
-    onFavoritesClick: () -> Unit,
 ) {
     val beers = viewModel.beersFlow.collectAsLazyPagingItems()
     val favoriteIds by viewModel.favoriteIds.collectAsState()
+    val isFavoriteFilterActive by viewModel.isFavoriteOnly.collectAsState()
+    val advancedFilters by viewModel.advancedFilters.collectAsState()
 
     var isSearchActive by rememberSaveable { mutableStateOf(viewModel.initialQuery.isNotEmpty()) }
     var searchQuery by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(viewModel.initialQuery))
     }
-    var isFilterActive by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     var shouldRequestFocus by remember { mutableStateOf(false) }
     var previewBeerId by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -147,17 +143,13 @@ fun BeersScreen(
                 TopAppBar(
                     title = { },
                     navigationIcon = {
-                        IconButton(
-                            onClick = onFavoritesClick,
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                    shape = CircleShape
-                                )
-                        ) {
-                            Icon(imageVector = Icons.Outlined.Favorite, contentDescription = "Favorites")
-                        }
+                        AppBarToggleButton(
+                            imageVector = Icons.Outlined.Favorite,
+                            contentDescription = stringResource(R.string.favorites),
+                            isActive = isFavoriteFilterActive,
+                            onClick = viewModel::onFavoriteFilterToggle,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
                     },
                     actions = {
                         AnimatedVisibility(
@@ -177,30 +169,16 @@ fun BeersScreen(
                                         shape = CircleShape
                                     )
                             ) {
-                                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+                                Icon(imageVector = Icons.Default.Search, contentDescription = stringResource(R.string.search))
                             }
                         }
-                        IconButton(
-                            onClick = {
-                                isFilterActive = !isFilterActive
-                                Log.d(
-                                    FILTERS_LOG_TAG,
-                                    if (isFilterActive) "Filters applied" else "Filters reset"
-                                )
-                            },
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                    shape = CircleShape
-                                )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FilterList,
-                                contentDescription = "Filters",
-                                tint = if (isFilterActive) FilterActiveColor else LocalContentColor.current
-                            )
-                        }
+                        AppBarToggleButton(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = stringResource(R.string.filters),
+                            isActive = advancedFilters.isActive,
+                            onClick = viewModel::onAdvancedFiltersToggle,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
@@ -241,12 +219,13 @@ fun BeersScreen(
                     onRetry = { beers.retry() },
                     modifier = Modifier.align(Alignment.Center)
                 )
-                is LoadState.NotLoading -> if (beers.itemCount == 0) {
+                is LoadState.NotLoading -> if (beers.isEmptyForUser(isFavoriteFilterActive, favoriteIds)) {
                     BeersEmpty(modifier = Modifier.align(Alignment.Center))
                 } else {
                     BeersList(
                         beers = beers,
                         favoriteIds = favoriteIds,
+                        favoriteOnly = isFavoriteFilterActive,
                         animatedVisibilityScope = animatedVisibilityScope,
                         sharedTransitionScope = sharedTransitionScope,
                         contentPadding = paddingValues,
@@ -263,6 +242,43 @@ fun BeersScreen(
                 onDismiss = { previewBeerId = null }
             )
         }
+    }
+}
+
+/**
+ * In favorites-only mode un-favorited items are hidden by [BeersList] but Paging still counts them,
+ * so "empty" has to be decided by what the user can actually see.
+ */
+private fun LazyPagingItems<BeerItemUiModel>.isEmptyForUser(
+    favoriteOnly: Boolean,
+    favoriteIds: Set<Int>
+): Boolean = if (favoriteOnly) {
+    itemSnapshotList.items.none { it.id in favoriteIds }
+} else {
+    itemCount == 0
+}
+
+/** Round AppBar button that is tinted with the theme's primary color while [isActive]. */
+@Composable
+private fun AppBarToggleButton(
+    imageVector: ImageVector,
+    contentDescription: String,
+    isActive: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.background(
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            shape = CircleShape
+        )
+    ) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = contentDescription,
+            tint = if (isActive) MaterialTheme.colorScheme.primary else LocalContentColor.current
+        )
     }
 }
 
@@ -373,6 +389,7 @@ internal fun BeersError(
 private fun BeersList(
     beers: LazyPagingItems<BeerItemUiModel>,
     favoriteIds: Set<Int>,
+    favoriteOnly: Boolean,
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
     contentPadding: PaddingValues,
@@ -392,16 +409,19 @@ private fun BeersList(
         ) { index ->
             beers[index]?.let { beer ->
                 val isFavorite = favoriteIds.contains(beer.id)
-                BeerItem(
-                    beer = beer,
-                    isFavorite = isFavorite,
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    sharedTransitionScope = sharedTransitionScope,
-                    onFavoriteClick = { onFavoriteClick(beer.id) },
-                    onClick = { onBeerClick(beer.id) },
-                    onLongClick = { onBeerLongClick(beer.id) }
-                )
-                HorizontalDivider()
+                // In favorites-only mode, items un-favorited from the list are hidden right away
+                if (!favoriteOnly || isFavorite) {
+                    BeerItem(
+                        beer = beer,
+                        isFavorite = isFavorite,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        sharedTransitionScope = sharedTransitionScope,
+                        onFavoriteClick = { onFavoriteClick(beer.id) },
+                        onClick = { onBeerClick(beer.id) },
+                        onLongClick = { onBeerLongClick(beer.id) }
+                    )
+                    HorizontalDivider()
+                }
             }
         }
 
@@ -432,6 +452,7 @@ internal fun BeerItem(
             .combinedClickable(
                 onLongClickLabel = stringResource(R.string.preview),
                 onLongClick = onLongClick,
+                onClickLabel = stringResource(R.string.recipe),
                 onClick = onClick
             )
             .padding(horizontal = 8.dp),

@@ -6,11 +6,13 @@ import androidx.paging.PagingData
 import io.github.alxiw.punkapp.data.local.BeersLocalDataSource
 import io.github.alxiw.punkapp.data.remote.BeerPagingSource
 import io.github.alxiw.punkapp.data.remote.BeersRemoteDataSource
-import io.github.alxiw.punkapp.data.remote.FavoritePagingSource
 import io.github.alxiw.punkapp.data.remote.model.toBeer
 import io.github.alxiw.punkapp.domain.BeersRepository
 import io.github.alxiw.punkapp.domain.model.Beer
+import io.github.alxiw.punkapp.domain.model.BeersFilter
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,21 +23,20 @@ internal class BeersRepositoryImpl @Inject constructor(
     private val localDataSource: BeersLocalDataSource
 ) : BeersRepository {
 
-    override fun getBeersFlow(query: String?): Flow<PagingData<Beer>> = Pager(
-        config = PagingConfig(
-            pageSize = PAGE_SIZE,
-            enablePlaceholders = false
-        ),
-        pagingSourceFactory = { BeerPagingSource(query, remoteDataSource, localDataSource) }
-    ).flow
-
-    override fun getFavoriteBeersFlow(): Flow<PagingData<Beer>> = Pager(
-        config = PagingConfig(
-            pageSize = PAGE_SIZE,
-            enablePlaceholders = false
-        ),
-        pagingSourceFactory = { FavoritePagingSource(remoteDataSource, localDataSource) }
-    ).flow
+    override fun getBeersFlow(filter: BeersFilter): Flow<PagingData<Beer>> = flow {
+        // Favorite ids are read once per Pager, so the set stays stable while the user paginates
+        // and toggling a heart doesn't restart paging
+        val ids = if (filter.favoritesOnly) localDataSource.getFavoriteIds() else null
+        emitAll(
+            Pager(
+                config = PagingConfig(
+                    pageSize = PAGE_SIZE,
+                    enablePlaceholders = false
+                ),
+                pagingSourceFactory = { BeerPagingSource(filter, ids, remoteDataSource, localDataSource) }
+            ).flow
+        )
+    }
 
     override fun getFavoriteIdsFlow(): Flow<Set<Int>> = localDataSource.getFavoriteIdsFlow()
         .map { it.toSet() }
