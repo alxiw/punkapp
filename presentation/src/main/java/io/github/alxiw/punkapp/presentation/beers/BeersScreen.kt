@@ -14,12 +14,15 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,23 +49,30 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,6 +82,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -87,6 +100,7 @@ import io.github.alxiw.punkapp.presentation.common.EbcMarkerSpacing
 import io.github.alxiw.punkapp.presentation.common.ebcColorOrNull
 import io.github.alxiw.punkapp.presentation.common.ebcMarkerModifier
 import io.github.alxiw.punkapp.presentation.common.toCleanString
+import kotlinx.coroutines.flow.first
 
 private val AbvColumnWidth = 50.dp
 private val IbuColumnWidth = 58.dp
@@ -110,15 +124,30 @@ fun BeersScreen(
     val advancedFilters by viewModel.advancedFilters.collectAsState()
 
     var isSearchActive by rememberSaveable { mutableStateOf(viewModel.initialQuery.isNotEmpty()) }
+    // The focus is a part of the screen state that has to survive an activity recreation: a
+    // configuration change (rotation) rebuilds the window without any focus, so the field has
+    // to take it back and show the keyboard again.
+    // A focus loss is deliberately not treated as a dismissal: on a configuration change it
+    // happens before the state is saved, and the search is dismissed explicitly (back press or
+    // the close button), which resets this flag.
+    var isSearchFocused by rememberSaveable { mutableStateOf(false) }
+    // Whether the keyboard was visible when the screen was paused. A configuration change hides
+    // the keyboard, so the value is sampled on pause: otherwise an open keyboard would look like
+    // a dismissed one and would not be restored. If the user hid the keyboard before the
+    // rotation, it stays hidden.
+    var wasImeVisibleByPause by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(viewModel.initialQuery))
     }
     val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val windowInfo = LocalWindowInfo.current
     var shouldRequestFocus by remember { mutableStateOf(false) }
     var previewBeerId by rememberSaveable { mutableStateOf<Int?>(null) }
 
     BackHandler(enabled = isSearchActive) {
         isSearchActive = false
+        isSearchFocused = false
         searchQuery = TextFieldValue("")
         viewModel.accept("")
     }
@@ -130,9 +159,28 @@ fun BeersScreen(
     LaunchedEffect(shouldRequestFocus) {
         if (shouldRequestFocus) {
             focusRequester.requestFocus()
+            keyboardController?.show()
             shouldRequestFocus = false
         }
     }
+
+    // Restores the focus and the keyboard after the activity was recreated (e.g. rotation).
+    LaunchedEffect(Unit) {
+        if (!isSearchFocused) return@LaunchedEffect
+        // A recreated window is not focused yet, and focusing the field before that is a no-op.
+        snapshotFlow { windowInfo.isWindowFocused }.first { it }
+        // Let the recreated hierarchy be placed before asking for the focus.
+        withFrameNanos { }
+        focusRequester.requestFocus()
+        if (wasImeVisibleByPause) {
+            keyboardController?.show()
+        } else {
+            // The field was left focused but the keyboard was hidden: keep it hidden.
+            keyboardController?.hide()
+        }
+    }
+
+    ImeVisibilityOnPauseObserver { isImeVisible -> wasImeVisibleByPause = isImeVisible }
 
     Scaffold(
         topBar = {
@@ -198,8 +246,12 @@ fun BeersScreen(
                     BeersSearchBar(
                         query = searchQuery,
                         onQueryChange = { searchQuery = it },
+                        onFocusChange = { isFocused ->
+                            if (isFocused) isSearchFocused = true
+                        },
                         onCloseClick = {
                             isSearchActive = false
+                            isSearchFocused = false
                             searchQuery = TextFieldValue("")
                             viewModel.accept("")
                         },
@@ -258,6 +310,28 @@ private fun LazyPagingItems<BeerItemUiModel>.isEmptyForUser(
     itemCount == 0
 }
 
+/**
+ * Samples the software keyboard visibility at the moment the screen is paused and reports it to
+ * [onValue]. A configuration change hides the keyboard after the pause, so sampling it any later
+ * would make a keyboard that was open at the moment of the rotation look like a dismissed one.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ImeVisibilityOnPauseObserver(onValue: (Boolean) -> Unit) {
+    val isImeVisible = WindowInsets.isImeVisible
+    val latestIsImeVisible by rememberUpdatedState(isImeVisible)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                onValue(latestIsImeVisible)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+}
+
 /** Round AppBar button that is tinted with the theme's primary color while [isActive]. */
 @Composable
 private fun AppBarToggleButton(
@@ -288,7 +362,8 @@ internal fun BeersSearchBar(
     onQueryChange: (TextFieldValue) -> Unit,
     onCloseClick: () -> Unit,
     focusRequester: FocusRequester,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onFocusChange: (Boolean) -> Unit = {}
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -318,7 +393,8 @@ internal fun BeersSearchBar(
                 onValueChange = onQueryChange,
                 modifier = Modifier
                     .weight(1f)
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { onFocusChange(it.isFocused) },
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface
