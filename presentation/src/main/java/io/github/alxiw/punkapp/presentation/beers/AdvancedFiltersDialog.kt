@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import io.github.alxiw.punkapp.presentation.R
+import io.github.alxiw.punkapp.presentation.common.DialogSystemBarIcons
 import io.github.alxiw.punkapp.presentation.common.toCleanString
 import java.time.YearMonth
 import java.util.Locale
@@ -78,6 +79,7 @@ internal fun AdvancedFiltersDialog(
             decorFitsSystemWindows = false
         )
     ) {
+        DialogSystemBarIcons()
         AdvancedFiltersScreen(
             filters = filters,
             onBackClick = onDismissRequest,

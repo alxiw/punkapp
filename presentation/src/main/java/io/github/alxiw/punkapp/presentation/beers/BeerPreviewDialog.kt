@@ -26,6 +26,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.paging.compose.LazyPagingItems
 import io.github.alxiw.punkapp.presentation.R
 import io.github.alxiw.punkapp.presentation.beers.model.BeerItemUiModel
+import io.github.alxiw.punkapp.presentation.common.DialogSystemBarIcons
 
 private val CardPadding = 24.dp
 private val DialogVerticalMargin = 48.dp
@@ -39,6 +40,7 @@ internal fun BeerPreviewDialog(
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
+        DialogSystemBarIcons()
         BoxWithConstraints {
             BeerPreviewCard(
                 beer = beer,
